@@ -17,7 +17,7 @@ El sistema está compuesto por 3 microservicios:
 - **Framework:** NestJS (monorepo)
 - **Base de datos:** PostgreSQL 16
 - **ORM:** Sequelize
-- **Contenedores:** Docker & Docker Compose
+- **Contenedores:** Docker
 - **Documentación:** Swagger (OpenAPI)
 
 ## Requisitos Previos
@@ -30,7 +30,7 @@ El sistema está compuesto por 3 microservicios:
 
 ```bash
 # Clonar repositorio
-git clone https://github.com/<tu-usuario>/TECOPOS_Nest_Technical_Test.git
+git clone https://github.com/AlexUlloaFu/TECOPOS_Nest_Technical_Test.git
 cd TECOPOS_Nest_Technical_Test
 
 # Instalar dependencias
@@ -42,7 +42,7 @@ cp .env.example .env
 
 ## Ejecución
 
-### Con Docker Compose (recomendado)
+### Con Docker Compose
 
 ```bash
 # Levantar todos los servicios
@@ -75,21 +75,6 @@ Una vez levantado el sistema, la documentación Swagger está disponible en:
 http://localhost:3000/api/docs
 ```
 
-## Estructura del Proyecto
-
-```
-├── apps/
-│   ├── gateway/          # API Gateway (HTTP - puerto 3000)
-│   ├── sso/              # Microservicio SSO (TCP - puerto 3001)
-│   └── banking/          # Microservicio Banking (TCP - puerto 3002)
-├── libs/
-│   └── common/           # Librería compartida (constantes, DTOs, etc.)
-├── docker-compose.yml
-├── Dockerfile
-├── nest-cli.json
-└── package.json
-```
-
 ## Tests
 
 ```bash
@@ -102,11 +87,3 @@ npm run test:e2e
 # Coverage
 npm run test:cov
 ```
-
-## Despliegue Público
-
-> URL: _pendiente_
-
-## Licencia
-
-MIT
