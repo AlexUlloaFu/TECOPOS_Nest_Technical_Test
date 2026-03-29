@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { AuthController } from './auth/auth.controller';
+import { AuthService } from './auth/auth.service';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { BANKING_SERVICE, SSO_SERVICE } from './constants/injection-tokens';
 import { GatewayController } from './gateway.controller';
 
 @Module({
@@ -8,7 +12,7 @@ import { GatewayController } from './gateway.controller';
     ConfigModule.forRoot({ isGlobal: true }),
     ClientsModule.registerAsync([
       {
-        name: 'SSO_SERVICE',
+        name: SSO_SERVICE,
         useFactory: (configService: ConfigService) => ({
           transport: Transport.TCP,
           options: {
@@ -19,7 +23,7 @@ import { GatewayController } from './gateway.controller';
         inject: [ConfigService],
       },
       {
-        name: 'BANKING_SERVICE',
+        name: BANKING_SERVICE,
         useFactory: (configService: ConfigService) => ({
           transport: Transport.TCP,
           options: {
@@ -31,6 +35,7 @@ import { GatewayController } from './gateway.controller';
       },
     ]),
   ],
-  controllers: [GatewayController],
+  controllers: [GatewayController, AuthController],
+  providers: [AuthService, JwtAuthGuard],
 })
 export class GatewayModule {}

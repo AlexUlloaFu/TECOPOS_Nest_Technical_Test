@@ -16,7 +16,7 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   SwaggerModule.setup(
-    'api/docs',
+    'docs',
     app,
     SwaggerModule.createDocument(app, swaggerConfig),
   );
