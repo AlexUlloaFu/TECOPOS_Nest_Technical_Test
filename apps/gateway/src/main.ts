@@ -10,19 +10,19 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
-  const config = new DocumentBuilder()
-    .setTitle('TECOPOS API Gateway')
-    .setDescription('API Gateway for TECOPOS microservices')
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('TECOPOS Gateway')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup(
+    'api/docs',
+    app,
+    SwaggerModule.createDocument(app, swaggerConfig),
+  );
 
   const port = process.env.GATEWAY_PORT || 3000;
   await app.listen(port);
-  console.log(`Gateway is running on port ${port}`);
 }
 
 bootstrap();

@@ -5,10 +5,6 @@ import { MessagePattern } from '@nestjs/microservices';
 export class SsoController {
   @MessagePattern({ cmd: 'sso_health' })
   healthCheck() {
-    return {
-      status: 'ok',
-      service: 'sso',
-      timestamp: new Date().toISOString(),
-    };
+    return { status: 'ok', service: 'sso' };
   }
 }

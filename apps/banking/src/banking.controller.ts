@@ -5,10 +5,6 @@ import { MessagePattern } from '@nestjs/microservices';
 export class BankingController {
   @MessagePattern({ cmd: 'banking_health' })
   healthCheck() {
-    return {
-      status: 'ok',
-      service: 'banking',
-      timestamp: new Date().toISOString(),
-    };
+    return { status: 'ok', service: 'banking' };
   }
 }

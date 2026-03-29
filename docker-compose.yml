@@ -13,7 +13,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - tecopos-network
+      - tecopos-net
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-tecopos}']
       interval: 10s
@@ -23,7 +23,6 @@ services:
   sso:
     build:
       context: .
-      dockerfile: Dockerfile
       args:
         APP_NAME: sso
     container_name: tecopos-sso
@@ -34,30 +33,30 @@ services:
       DB_USER: ${DB_USER:-tecopos}
       DB_PASSWORD: ${DB_PASSWORD:-tecopos123}
       DB_NAME: ${DB_NAME:-tecopos_sso}
+      JWT_SECRET: ${JWT_SECRET:-change_me}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600}
     depends_on:
       postgres:
         condition: service_healthy
     networks:
-      - tecopos-network
+      - tecopos-net
     restart: unless-stopped
 
   banking:
     build:
       context: .
-      dockerfile: Dockerfile
       args:
         APP_NAME: banking
     container_name: tecopos-banking
     environment:
       BANKING_PORT: 3002
     networks:
-      - tecopos-network
+      - tecopos-net
     restart: unless-stopped
 
   gateway:
     build:
       context: .
-      dockerfile: Dockerfile
       args:
         APP_NAME: gateway
     container_name: tecopos-gateway
@@ -73,12 +72,12 @@ services:
       - sso
       - banking
     networks:
-      - tecopos-network
+      - tecopos-net
     restart: unless-stopped
 
 volumes:
   postgres_data:
 
 networks:
-  tecopos-network:
+  tecopos-net:
     driver: bridge

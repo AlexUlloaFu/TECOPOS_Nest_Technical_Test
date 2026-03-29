@@ -1,2 +1,0 @@
-export const SSO_SERVICE = 'SSO_SERVICE';
-export const BANKING_SERVICE = 'BANKING_SERVICE';
