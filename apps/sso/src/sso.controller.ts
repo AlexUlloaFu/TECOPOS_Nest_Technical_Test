@@ -3,7 +3,7 @@ import { MessagePattern } from '@nestjs/microservices';
 
 @Controller()
 export class SsoController {
-  @MessagePattern({ cmd: 'sso_health' })
+  @MessagePattern('sso_health')
   healthCheck() {
     return { status: 'ok', service: 'sso' };
   }

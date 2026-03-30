@@ -3,6 +3,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { GatewayModule } from './gateway.module';
 
+const GATEWAY_PORT = 3000;
+
 async function bootstrap() {
   const app = await NestFactory.create(GatewayModule);
 
@@ -15,14 +17,11 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-  SwaggerModule.setup(
-    'docs',
-    app,
-    SwaggerModule.createDocument(app, swaggerConfig),
-  );
+  SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, swaggerConfig), {
+    useGlobalPrefix: true,
+  });
 
-  const port = process.env.GATEWAY_PORT || 3000;
-  await app.listen(port);
+  await app.listen(GATEWAY_PORT);
 }
 
 bootstrap();

@@ -3,9 +3,10 @@ import {
   HttpStatus,
   Inject,
   Injectable,
+  OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { ClientKafka, RpcException } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { SSO_SERVICE } from '../constants/injection-tokens';
 import {
@@ -21,27 +22,30 @@ import { TenantPayload } from './interfaces/tenant-payload.interface';
 type RpcErrorPayload = { statusCode: number; message: string };
 
 @Injectable()
-export class AuthService {
-  constructor(@Inject(SSO_SERVICE) private readonly ssoClient: ClientProxy) {}
+export class AuthService implements OnModuleInit {
+  constructor(@Inject(SSO_SERVICE) private readonly ssoClient: ClientKafka) {}
+
+  async onModuleInit(): Promise<void> {
+    this.ssoClient.subscribeToResponseOf(AUTH_REGISTER);
+    this.ssoClient.subscribeToResponseOf(AUTH_LOGIN);
+    this.ssoClient.subscribeToResponseOf(AUTH_VALIDATE_TOKEN);
+    await this.ssoClient.connect();
+  }
 
   register(dto: RegisterDto): Promise<AuthResponse> {
-    return this.sendSso<RegisterDto, AuthResponse>(
-      AUTH_REGISTER,
-      dto,
-    );
+    return this.sendSso<RegisterDto, AuthResponse>(AUTH_REGISTER, { ...dto });
   }
 
   login(dto: LoginDto): Promise<AuthResponse> {
-    return this.sendSso<LoginDto, AuthResponse>(AUTH_LOGIN, dto);
+    return this.sendSso<LoginDto, AuthResponse>(AUTH_LOGIN, { ...dto });
   }
 
   async validateToken(token: string): Promise<TenantPayload> {
     try {
       return await firstValueFrom(
-        this.ssoClient.send<TenantPayload, { token: string }>(
-          { cmd: AUTH_VALIDATE_TOKEN },
-          { token },
-        ),
+        this.ssoClient.send<TenantPayload, { token: string }>(AUTH_VALIDATE_TOKEN, {
+          token,
+        }),
       );
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
@@ -51,7 +55,7 @@ export class AuthService {
   private async sendSso<TReq, TRes>(pattern: string, payload: TReq): Promise<TRes> {
     try {
       return await firstValueFrom(
-        this.ssoClient.send<TRes, TReq>({ cmd: pattern }, payload),
+        this.ssoClient.send<TRes, TReq>(pattern, payload),
       );
     } catch (error) {
       this.mapRpcToHttp(error);
