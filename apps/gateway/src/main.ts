@@ -4,7 +4,7 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { GatewayModule } from './gateway.module';
 
-const GATEWAY_PORT = 3000;
+const GATEWAY_PORT = Number(process.env.PORT || 3000);
 const KAFKA_BROKERS = (process.env.KAFKA_BROKERS || 'kafka:9092')
   .split(',')
   .map((broker) => broker.trim())
