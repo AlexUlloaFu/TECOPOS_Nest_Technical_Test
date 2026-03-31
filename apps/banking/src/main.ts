@@ -1,11 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { buildKafkaClientOptions } from '@libs/common';
 import { BankingModule } from './banking.module';
-
-const KAFKA_BROKERS = (process.env.KAFKA_BROKERS || 'kafka:9092')
-  .split(',')
-  .map((broker) => broker.trim())
-  .filter(Boolean);
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
@@ -14,8 +10,7 @@ async function bootstrap() {
       transport: Transport.KAFKA,
       options: {
         client: {
-          clientId: 'banking-service',
-          brokers: KAFKA_BROKERS,
+          ...buildKafkaClientOptions('banking-service'),
         },
         consumer: {
           groupId: 'banking-service-group',

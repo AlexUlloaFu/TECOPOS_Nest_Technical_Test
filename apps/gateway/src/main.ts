@@ -2,13 +2,10 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { buildKafkaClientOptions } from '@libs/common';
 import { GatewayModule } from './gateway.module';
 
 const GATEWAY_PORT = Number(process.env.PORT || 3000);
-const KAFKA_BROKERS = (process.env.KAFKA_BROKERS || 'kafka:9092')
-  .split(',')
-  .map((broker) => broker.trim())
-  .filter(Boolean);
 
 async function bootstrap() {
   const app = await NestFactory.create(GatewayModule);
@@ -17,8 +14,7 @@ async function bootstrap() {
     transport: Transport.KAFKA,
     options: {
       client: {
-        clientId: 'gateway-events-consumer',
-        brokers: KAFKA_BROKERS,
+        ...buildKafkaClientOptions('gateway-events-consumer'),
       },
       consumer: {
         groupId: 'gateway-events-consumer-group',

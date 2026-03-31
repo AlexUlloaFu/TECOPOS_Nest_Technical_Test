@@ -10,4 +10,4 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
-CMD ["node", "dist/apps/gateway/main.js"]
+CMD ["node", "dist/apps/gateway/apps/gateway/src/main.js"]

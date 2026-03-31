@@ -15,7 +15,7 @@ Configura estos valores en `.env`:
 
 - `DATABASE_URL` (base de datos de SSO).
 - `BANKING_API_BASE_URL` (base URL de MockAPI, por ejemplo `https://xxxx.mockapi.io/api`).
-- `KAFKA_BROKERS` (por defecto `kafka:9092` cuando corres con Docker Compose).
+- `KAFKA_BROKERS` (por defecto `kafka:9092` con Docker Compose).
 - `PORT` (puerto HTTP del gateway, por defecto `3000`).
 
 ## Uso
@@ -25,6 +25,7 @@ Configura estos valores en `.env`:
 ```bash
 docker compose up --build
 ```
+Compose levanta `kafka`, `sso`, `banking` y `gateway`.
 
 ### Correr en local (modo desarrollo)
 
@@ -37,30 +38,6 @@ Swagger queda en:
 ```text
 http://localhost:3000/api/docs
 ```
-
-## Deploy en Render
-
-Este repo ya incluye `render.yaml` para desplegar:
-
-- `tecopos-gateway` (público)
-- `tecopos-sso` (privado)
-- `tecopos-banking` (privado)
-- `tecopos-kafka` (privado)
-
-Pasos:
-
-1. En Render, elige **New + > Blueprint**.
-2. Conecta este repositorio.
-3. Render detectará `render.yaml` y creará los 4 servicios.
-4. Completa variables pendientes:
-   - `DATABASE_URL` en `tecopos-sso`
-   - `BANKING_API_BASE_URL` en `tecopos-banking`
-5. Lanza el deploy.
-
-Notas:
-
-- El gateway usa `PORT` del entorno (Render lo inyecta automáticamente).
-- Internamente los servicios se conectan por `KAFKA_BROKERS=tecopos-kafka:9092`.
 
 ## Endpoints
 
@@ -81,16 +58,15 @@ Notas:
 - `POST /api/banking/operations` (requiere `Bearer <token>`)
   - Crea una operación para una cuenta del usuario.
 
-## Kafka gestionado externo (opcional)
+## Deploy en Render
 
-Para pruebas técnicas, levantar Kafka en Render está bien.  
-Para un entorno más profesional, conviene usar un proveedor gestionado (por ejemplo Confluent Cloud, Aiven, Upstash Kafka o Redpanda Cloud).
+- `tecopos-gateway` (público)
+- `tecopos-sso` (privado)
+- `tecopos-banking` (privado)
 
-Ventajas:
+Despliegue en este orden: `sso` y `banking` -> `gateway`.
 
-- mayor estabilidad (replicación y alta disponibilidad),
-- menos operación manual,
-- observabilidad y monitoreo listos,
-- upgrades y seguridad manejados por el proveedor.
+Notas:
 
-Si usas Kafka externo, solo cambia `KAFKA_BROKERS` en `gateway`, `sso` y `banking` por el broker del proveedor (y agrega credenciales/SASL si aplica).
+- El gateway usa `PORT` del entorno.
+- En local, `KAFKA_BROKERS` debe resolver a `kafka:9092`.
