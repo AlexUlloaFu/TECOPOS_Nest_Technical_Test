@@ -7,7 +7,6 @@ import { AuthModule } from './auth/auth.module';
 import { BankingEventsController } from './banking/banking-events.controller';
 import { BankingModule } from './banking/banking.module';
 import { GatewayController } from './gateway.controller';
-import { SsoModule } from './sso/sso.module';
 
 @Module({
   imports: [
@@ -20,7 +19,6 @@ import { SsoModule } from './sso/sso.module';
         limit: 60,
       },
     ]),
-    SsoModule,
     AuthModule,
     BankingModule,
   ],
