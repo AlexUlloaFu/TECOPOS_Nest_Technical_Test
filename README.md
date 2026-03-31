@@ -100,6 +100,15 @@ Ejemplo de URL de operaciones: `https://69caaf2dba5984c44bf3a0d1.mockapi.io/api/
 - Ver logs del broker: `docker compose logs kafka`
 - Si hay problemas de red, reiniciar stack: `docker compose down && docker compose up --build -d`
 
+## Seguridad (Rate Limiting)
+
+Gateway incluye limitación global de consultas para mitigar ráfagas tipo DDoS:
+
+- Ventana: 60000 ms.
+- Máximo por ventana: 60 requests por IP.
+
+Cuando se supera el límite, la API responde `429 Too Many Requests`.
+
 ## Tests
 
 ```bash
