@@ -36,9 +36,9 @@ Compose levanta `sso`, `banking` y `gateway` conectados a un Kafka externo.
 Topicos Kafka usados (layout compacto de 5 topicos):
 
 - `auth.commands`
-- `auth.commands.reply`
+- `auth.replies`
 - `banking.commands`
-- `banking.commands.reply`
+- `banking.replies`
 - `banking.events`
 
 ### Correr en local (modo desarrollo)

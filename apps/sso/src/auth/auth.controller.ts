@@ -1,12 +1,12 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { AuthService } from './auth.service';
 import {
   AUTH_ACTION_LOGIN,
   AUTH_ACTION_REGISTER,
   AUTH_ACTION_VALIDATE_TOKEN,
   AUTH_COMMANDS,
-} from './auth.constants';
+} from '@libs/common';
+import { AuthService } from './auth.service';
 import { RegisterTenantDto } from './dto/register-tenant.dto';
 import { LoginTenantDto } from './dto/login-tenant.dto';
 
@@ -24,7 +24,9 @@ export class AuthController {
       case AUTH_ACTION_LOGIN:
         return this.authService.login(payload.data as LoginTenantDto);
       case AUTH_ACTION_VALIDATE_TOKEN:
-        return this.authService.validateToken((payload.data as { token: string }).token);
+        return this.authService.validateToken(
+          (payload.data as { token: string }).token,
+        );
       default:
         throw new RpcException({
           statusCode: 400,

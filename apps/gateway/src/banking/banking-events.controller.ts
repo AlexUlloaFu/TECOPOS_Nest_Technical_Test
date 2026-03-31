@@ -3,7 +3,7 @@ import { EventPattern, Payload } from '@nestjs/microservices';
 import {
   BANKING_ACTION_FINANCIAL_OPERATION_CREATED_EVENT,
   BANKING_EVENTS,
-} from './constants/banking.patterns';
+} from '@libs/common';
 import { FinancialOperationCreatedEvent } from './interfaces/financial-operation-created-event.interface';
 
 @Controller()
@@ -13,9 +13,15 @@ export class BankingEventsController {
   @EventPattern(BANKING_EVENTS)
   handleFinancialOperationCreated(
     @Payload()
-    payload: { action?: string; data?: FinancialOperationCreatedEvent },
+    payload: {
+      action?: string;
+      data?: FinancialOperationCreatedEvent;
+    },
   ): void {
-    if (payload.action !== BANKING_ACTION_FINANCIAL_OPERATION_CREATED_EVENT || !payload.data) {
+    if (
+      payload.action !== BANKING_ACTION_FINANCIAL_OPERATION_CREATED_EVENT ||
+      !payload.data
+    ) {
       return;
     }
 

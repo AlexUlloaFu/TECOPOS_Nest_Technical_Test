@@ -1,14 +1,20 @@
 import { HttpService } from '@nestjs/axios';
-import { HttpStatus, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  HttpStatus,
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
-import { BANKING_EVENTS_CLIENT } from './constants/injection-tokens';
 import {
   BANKING_ACTION_FINANCIAL_OPERATION_CREATED_EVENT,
   BANKING_EVENTS,
-} from './constants/banking.patterns';
+} from '@libs/common';
+import { BANKING_EVENTS_CLIENT } from './constants/injection-tokens';
 import { FinancialAccount } from './interfaces/banking-account.interface';
 import { CreateFinancialOperationRequest } from './interfaces/create-operation-request.interface';
 import { FinancialTransaction } from './interfaces/banking-operation.interface';
@@ -38,11 +44,15 @@ export class BankingService implements OnModuleInit {
   async listAccounts(email: string): Promise<FinancialAccount[]> {
     this.ensureBaseUrl();
     const endpoint = this.buildUrl(this.baseUrl, ACCOUNTS_PATH);
-    this.logger.log(`listAccounts requested email=${email}, endpoint=${endpoint}`);
+    this.logger.log(
+      `listAccounts requested email=${email}, endpoint=${endpoint}`,
+    );
 
     try {
       const accounts = await this.loadFinancialAccounts();
-      const filtered = accounts.filter((account) => account.userEmail === email);
+      const filtered = accounts.filter(
+        (account) => account.userEmail === email,
+      );
       this.logger.log(
         `listAccounts resolved: totalAccounts=${accounts.length}, matchedAccounts=${filtered.length}, email=${email}`,
       );
@@ -66,7 +76,9 @@ export class BankingService implements OnModuleInit {
     try {
       const accounts = await this.loadFinancialAccounts();
       const accountsById = new Map(
-        accounts.map((account) => [account.financialAccountId, account] as const),
+        accounts.map(
+          (account) => [account.financialAccountId, account] as const,
+        ),
       );
       const response = await firstValueFrom(
         this.httpService.get<unknown>(
@@ -103,7 +115,8 @@ export class BankingService implements OnModuleInit {
       const accounts = await this.loadFinancialAccounts();
       const account = accounts.find(
         (candidate) =>
-          candidate.financialAccountId === accountId && candidate.userEmail === email,
+          candidate.financialAccountId === accountId &&
+          candidate.userEmail === email,
       );
 
       if (!account) {
@@ -306,13 +319,10 @@ export class BankingService implements OnModuleInit {
   ): Promise<void> {
     try {
       await firstValueFrom(
-        this.eventsClient.emit<FinancialOperationCreatedEvent>(
-          BANKING_EVENTS,
-          {
-            action: BANKING_ACTION_FINANCIAL_OPERATION_CREATED_EVENT,
-            data: eventPayload,
-          },
-        ),
+        this.eventsClient.emit<FinancialOperationCreatedEvent>(BANKING_EVENTS, {
+          action: BANKING_ACTION_FINANCIAL_OPERATION_CREATED_EVENT,
+          data: eventPayload,
+        }),
       );
       this.logger.log(
         `event published topic=${BANKING_EVENTS}, action=${BANKING_ACTION_FINANCIAL_OPERATION_CREATED_EVENT}, transactionId=${eventPayload.transactionId}`,

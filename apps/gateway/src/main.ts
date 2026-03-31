@@ -31,9 +31,14 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-  SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, swaggerConfig), {
-    useGlobalPrefix: true,
-  });
+  SwaggerModule.setup(
+    'docs',
+    app,
+    SwaggerModule.createDocument(app, swaggerConfig),
+    {
+      useGlobalPrefix: true,
+    },
+  );
 
   await app.startAllMicroservices();
   await app.listen(GATEWAY_PORT);

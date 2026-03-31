@@ -50,14 +50,20 @@ export class BankingController {
     @Req() req: AuthenticatedRequest,
     @Query('accountId') accountId?: string,
   ): Promise<FinancialTransaction[]> {
-    return this.bankingService.listOperations(req.user.email, accountId?.trim());
+    return this.bankingService.listOperations(
+      req.user.email,
+      accountId?.trim(),
+    );
   }
 
   @Post('operations')
   @ApiOperation({
     summary: 'Create a financial operation and emit real-time event',
   })
-  @ApiResponse({ status: 201, description: 'Financial operation created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Financial operation created successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   createFinancialOperation(
     @Req() req: AuthenticatedRequest,

@@ -16,7 +16,10 @@ describe('Auth (e2e)', () => {
   beforeAll(async () => {
     authService = {
       login: jest.fn(async (dto: { email: string; password: string }) => {
-        if (dto.email === 'test@example.com' && dto.password === 'Password123') {
+        if (
+          dto.email === 'test@example.com' &&
+          dto.password === 'Password123'
+        ) {
           return {
             accessToken: 'mock-jwt-token',
             tenant: {
@@ -104,5 +107,4 @@ describe('Auth (e2e)', () => {
       expect(authService.login).toHaveBeenCalledTimes(2);
     });
   });
-
 });

@@ -6,7 +6,7 @@ import {
   BANKING_ACTION_OPERATIONS_LIST,
   BANKING_COMMANDS,
   BANKING_HEALTH,
-} from './constants/banking.patterns';
+} from '@libs/common';
 import { BankingService } from './banking.service';
 import { CreateFinancialOperationRequest } from './interfaces/create-operation-request.interface';
 import { FinancialAccount } from './interfaces/banking-account.interface';
@@ -25,9 +25,10 @@ export class BankingController {
   }
 
   @MessagePattern(BANKING_COMMANDS)
-  handleBankingCommand(
-    payload: { action?: string; data?: unknown },
-  ):
+  handleBankingCommand(payload: {
+    action?: string;
+    data?: unknown;
+  }):
     | { status: string; service: string }
     | Promise<FinancialAccount[]>
     | Promise<FinancialTransaction[]>
@@ -37,7 +38,9 @@ export class BankingController {
         return this.healthCheck();
       case BANKING_ACTION_ACCOUNTS_LIST: {
         const request = payload.data as BankingListRequest;
-        this.logger.log(`Kafka ${BANKING_ACTION_ACCOUNTS_LIST} email=${request.email}`);
+        this.logger.log(
+          `Kafka ${BANKING_ACTION_ACCOUNTS_LIST} email=${request.email}`,
+        );
         return this.bankingService.listAccounts(request.email);
       }
       case BANKING_ACTION_OPERATIONS_LIST: {

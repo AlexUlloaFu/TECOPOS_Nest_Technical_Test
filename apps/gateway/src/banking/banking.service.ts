@@ -13,7 +13,7 @@ import {
   BANKING_ACTION_FINANCIAL_OPERATIONS_CREATE,
   BANKING_ACTION_OPERATIONS_LIST,
   BANKING_COMMANDS,
-} from './constants/banking.patterns';
+} from '@libs/common';
 import { CreateFinancialOperationRequest } from './interfaces/create-operation-request.interface';
 import { FinancialAccount } from './interfaces/banking-account.interface';
 import { BankingListRequest } from './interfaces/banking-list-request.interface';
@@ -90,7 +90,9 @@ export class BankingService implements OnModuleInit {
     }
 
     const message =
-      error instanceof Error ? error.message : 'Unexpected banking service error';
+      error instanceof Error
+        ? error.message
+        : 'Unexpected banking service error';
     throw new HttpException(message, HttpStatus.BAD_GATEWAY);
   }
 

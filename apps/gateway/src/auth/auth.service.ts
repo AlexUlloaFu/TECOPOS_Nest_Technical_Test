@@ -8,13 +8,13 @@ import {
 } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { SSO_SERVICE } from '../constants/injection-tokens';
 import {
   AUTH_ACTION_LOGIN,
   AUTH_ACTION_REGISTER,
   AUTH_ACTION_VALIDATE_TOKEN,
   AUTH_COMMANDS,
-} from './constants/auth.patterns';
+} from '@libs/common';
+import { SSO_SERVICE } from '../constants/injection-tokens';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthResponse } from './interfaces/auth-response.interface';
@@ -78,7 +78,9 @@ export class AuthService implements OnModuleInit {
     }
 
     const message =
-      error instanceof Error ? error.message : 'Unexpected authentication error';
+      error instanceof Error
+        ? error.message
+        : 'Unexpected authentication error';
     throw new HttpException(message, HttpStatus.BAD_GATEWAY);
   }
 
@@ -111,9 +113,6 @@ export class AuthService implements OnModuleInit {
       return false;
     }
     const v = value as Partial<RpcErrorPayload>;
-    return (
-      typeof v.statusCode === 'number' &&
-      typeof v.message === 'string'
-    );
+    return typeof v.statusCode === 'number' && typeof v.message === 'string';
   }
 }
