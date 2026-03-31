@@ -1,4 +1,5 @@
-export interface BankingAccount {
-  id: string;
+export interface FinancialAccount {
+  financialAccountId: string;
+  userEmail: string;
   [key: string]: unknown;
 }

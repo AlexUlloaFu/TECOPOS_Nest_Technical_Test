@@ -1,6 +1,6 @@
-export interface BankingOperation {
+export interface FinancialTransaction {
   transactionId: string;
-  tenantId: string;
+  financialAccountId: string;
   currency: string;
   amount: number;
 }

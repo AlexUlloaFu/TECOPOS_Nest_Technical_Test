@@ -12,9 +12,9 @@ import {
   BANKING_ACCOUNTS_LIST,
   BANKING_OPERATIONS_LIST,
 } from './constants/banking.patterns';
-import { BankingAccount } from './interfaces/banking-account.interface';
+import { FinancialAccount } from './interfaces/banking-account.interface';
 import { BankingListRequest } from './interfaces/banking-list-request.interface';
-import { BankingOperation } from './interfaces/banking-operation.interface';
+import { FinancialTransaction } from './interfaces/banking-operation.interface';
 
 type RpcErrorPayload = { statusCode: number; message: string };
 
@@ -30,17 +30,23 @@ export class BankingService implements OnModuleInit {
     await this.bankingClient.connect();
   }
 
-  listAccounts(tenantId: string): Promise<BankingAccount[]> {
-    return this.sendBanking<BankingListRequest, BankingAccount[]>(
+  listAccounts(email: string): Promise<FinancialAccount[]> {
+    return this.sendBanking<BankingListRequest, FinancialAccount[]>(
       BANKING_ACCOUNTS_LIST,
-      { tenantId },
+      { email },
     );
   }
 
-  listOperations(tenantId: string): Promise<BankingOperation[]> {
-    return this.sendBanking<BankingListRequest, BankingOperation[]>(
+  listOperations(
+    email: string,
+    accountId?: string,
+  ): Promise<FinancialTransaction[]> {
+    return this.sendBanking<BankingListRequest, FinancialTransaction[]>(
       BANKING_OPERATIONS_LIST,
-      { tenantId },
+      {
+        email,
+        ...(accountId ? { accountId } : {}),
+      },
     );
   }
 

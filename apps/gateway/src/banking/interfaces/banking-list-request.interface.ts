@@ -1,3 +1,4 @@
 export interface BankingListRequest {
-  tenantId: string;
+  email: string;
+  accountId?: string;
 }

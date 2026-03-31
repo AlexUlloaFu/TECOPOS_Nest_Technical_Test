@@ -4,12 +4,12 @@ Microsistema dockerizado con arquitectura de microservicios usando NestJS.
 
 ## Arquitectura
 
-| Servicio    | Descripción                          | Puerto |
-| ----------- | ------------------------------------ | ------ |
-| **Gateway** | API Gateway, Swagger, JWT guard      | 3000   |
-| **SSO**     | Auth service (Kafka + Neon)          | 3001*  |
-| **Banking** | Cuentas y operaciones (Kafka + API)  | 3002*  |
-| **Kafka**   | Broker interno (request/reply)       | 9092   |
+| Servicio    | Descripción                         | Puerto |
+| ----------- | ----------------------------------- | ------ |
+| **Gateway** | API Gateway, Swagger, JWT guard     | 3000   |
+| **SSO**     | Auth service (Kafka + Neon)         | 3001\* |
+| **Banking** | Cuentas y operaciones (Kafka + API) | 3002\* |
+| **Kafka**   | Broker interno (request/reply)      | 9092   |
 
 `*` SSO y Banking usan Kafka para comunicación interna con Gateway; los puertos 3001/3002 no se exponen públicamente.
 
@@ -60,7 +60,8 @@ http://localhost:3000/api/docs
 - `POST /api/auth/login`
 - `GET /api/auth/me` (Bearer JWT)
 - `GET /api/banking/accounts` (Bearer JWT)
-- `GET /api/banking/operations` (Bearer JWT)
+- `GET /api/banking/operations` (Bearer JWT, devuelve todas las transacciones del usuario)
+- `GET /api/banking/operations?accountId=<id>` (Bearer JWT, devuelve solo esa cuenta)
 
 Internamente, `gateway -> sso` y `gateway -> banking` usan Kafka request/reply.
 
@@ -70,13 +71,28 @@ Los endpoints de banking leen datos de un proveedor externo ([MockAPI](https://m
 
 Las rutas de recurso `/accounts` y `/financeTransactions` van fijas en el código del microservicio banking.
 
+Modelo lógico actual (sin tablas físicas):
+
+- `financialAccount`: representa la cuenta financiera y su dueño (`userEmail`).
+- `financialTransaction`: cada transacción pertenece a una sola cuenta vía `financialAccountId`.
+- La pertenencia del usuario se resuelve por `email` del JWT (no por `tenantId`).
+
+Para que los endpoints devuelvan datos, MockAPI debe contener:
+
+- En `/accounts`: `id` (o `financialAccountId`) y `email` (o `userEmail`).
+- En `/financeTransactions`: `transactionId` (o `id`) y `financialAccountId` (o `accountId`).
+
 Ejemplo de URL de operaciones: `https://69caaf2dba5984c44bf3a0d1.mockapi.io/api/financeTransactions`.
 
 ### Smoke test rápido
 
 1. Obtener token en `POST /api/auth/login`.
 2. En Swagger (`/api/docs`), presionar **Authorize** y pegar `Bearer <token>`.
-3. Ejecutar `GET /api/banking/accounts` y `GET /api/banking/operations`.
+3. Ejecutar `GET /api/banking/accounts`.
+4. Ejecutar `GET /api/banking/operations` para ver todas las transacciones del usuario autenticado.
+5. Elegir un `financialAccountId` de la respuesta de cuentas.
+6. Ejecutar `GET /api/banking/operations?accountId=<financialAccountId>`.
+7. Validar que en modo con `accountId` solo salgan movimientos de esa cuenta.
 
 ### Troubleshooting Kafka rápido
 
