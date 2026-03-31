@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { buildKafkaClientOptions } from '@libs/common';
+import { buildKafkaClientOptions } from '@libs/client/kafka';
 import { GatewayModule } from './gateway.module';
 
 const GATEWAY_PORT = Number(process.env.PORT || 3000);

@@ -6,7 +6,7 @@ import {
   BANKING_ACTION_OPERATIONS_LIST,
   BANKING_COMMANDS,
   BANKING_HEALTH,
-} from '@libs/common';
+} from '@libs/client/kafka';
 import { BankingService } from './banking.service';
 import { CreateFinancialOperationRequest } from './interfaces/create-operation-request.interface';
 import { FinancialAccount } from './interfaces/banking-account.interface';

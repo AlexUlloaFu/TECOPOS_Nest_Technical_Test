@@ -5,7 +5,7 @@ import {
   AUTH_ACTION_REGISTER,
   AUTH_ACTION_VALIDATE_TOKEN,
   AUTH_COMMANDS,
-} from '@libs/common';
+} from '@libs/client/kafka';
 import { AuthService } from './auth.service';
 import { RegisterTenantDto } from './dto/register-tenant.dto';
 import { LoginTenantDto } from './dto/login-tenant.dto';

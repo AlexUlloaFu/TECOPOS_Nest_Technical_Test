@@ -13,7 +13,7 @@ import {
   BANKING_ACTION_FINANCIAL_OPERATIONS_CREATE,
   BANKING_ACTION_OPERATIONS_LIST,
   BANKING_COMMANDS,
-} from '@libs/common';
+} from '@libs/client/kafka';
 import { CreateFinancialOperationRequest } from './interfaces/create-operation-request.interface';
 import { FinancialAccount } from './interfaces/banking-account.interface';
 import { BankingListRequest } from './interfaces/banking-list-request.interface';

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { buildKafkaClientOptions } from '@libs/common';
+import { buildKafkaClientOptions } from '@libs/client/kafka';
 import { BankingController } from './banking.controller';
 import { BANKING_EVENTS_CLIENT } from './constants/injection-tokens';
 import { BankingService } from './banking.service';

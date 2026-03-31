@@ -13,7 +13,7 @@ import {
   AUTH_ACTION_REGISTER,
   AUTH_ACTION_VALIDATE_TOKEN,
   AUTH_COMMANDS,
-} from '@libs/common';
+} from '@libs/client/kafka';
 import { SSO_SERVICE } from '../constants/injection-tokens';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';

@@ -3,7 +3,7 @@ import { EventPattern, Payload } from '@nestjs/microservices';
 import {
   BANKING_ACTION_FINANCIAL_OPERATION_CREATED_EVENT,
   BANKING_EVENTS,
-} from '@libs/common';
+} from '@libs/client/kafka';
 import { FinancialOperationCreatedEvent } from './interfaces/financial-operation-created-event.interface';
 
 @Controller()

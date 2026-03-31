@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { buildKafkaClientOptions } from '@libs/common';
+import { buildKafkaClientOptions } from '@libs/client/kafka';
 import { SsoModule } from './sso.module';
 
 async function bootstrap() {

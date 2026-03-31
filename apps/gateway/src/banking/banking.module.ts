@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { buildKafkaClientOptions } from '@libs/common';
+import { buildKafkaClientOptions } from '@libs/client/kafka';
 import { AuthModule } from '../auth/auth.module';
 import { BANKING_SERVICE } from '../constants/injection-tokens';
 import { BankingController } from './banking.controller';

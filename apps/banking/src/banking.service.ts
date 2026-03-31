@@ -13,7 +13,7 @@ import { firstValueFrom } from 'rxjs';
 import {
   BANKING_ACTION_FINANCIAL_OPERATION_CREATED_EVENT,
   BANKING_EVENTS,
-} from '@libs/common';
+} from '@libs/client/kafka';
 import { BANKING_EVENTS_CLIENT } from './constants/injection-tokens';
 import { FinancialAccount } from './interfaces/banking-account.interface';
 import { CreateFinancialOperationRequest } from './interfaces/create-operation-request.interface';
