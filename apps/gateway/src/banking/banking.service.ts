@@ -10,8 +10,10 @@ import { firstValueFrom } from 'rxjs';
 import { BANKING_SERVICE } from '../constants/injection-tokens';
 import {
   BANKING_ACCOUNTS_LIST,
+  BANKING_FINANCIAL_OPERATIONS_CREATE,
   BANKING_OPERATIONS_LIST,
 } from './constants/banking.patterns';
+import { CreateFinancialOperationRequest } from './interfaces/create-operation-request.interface';
 import { FinancialAccount } from './interfaces/banking-account.interface';
 import { BankingListRequest } from './interfaces/banking-list-request.interface';
 import { FinancialTransaction } from './interfaces/banking-operation.interface';
@@ -27,6 +29,7 @@ export class BankingService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     this.bankingClient.subscribeToResponseOf(BANKING_ACCOUNTS_LIST);
     this.bankingClient.subscribeToResponseOf(BANKING_OPERATIONS_LIST);
+    this.bankingClient.subscribeToResponseOf(BANKING_FINANCIAL_OPERATIONS_CREATE);
     await this.bankingClient.connect();
   }
 
@@ -47,6 +50,18 @@ export class BankingService implements OnModuleInit {
         email,
         ...(accountId ? { accountId } : {}),
       },
+    );
+  }
+
+  createFinancialOperation(
+    email: string,
+    accountId: string,
+    currency: string,
+    amount: number,
+  ): Promise<FinancialTransaction> {
+    return this.sendBanking<CreateFinancialOperationRequest, FinancialTransaction>(
+      BANKING_FINANCIAL_OPERATIONS_CREATE,
+      { email, accountId, currency, amount },
     );
   }
 

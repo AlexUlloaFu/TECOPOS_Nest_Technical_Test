@@ -2,10 +2,12 @@ import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import {
   BANKING_ACCOUNTS_LIST,
+  BANKING_FINANCIAL_OPERATIONS_CREATE,
   BANKING_HEALTH,
   BANKING_OPERATIONS_LIST,
 } from './constants/banking.patterns';
 import { BankingService } from './banking.service';
+import { CreateFinancialOperationRequest } from './interfaces/create-operation-request.interface';
 import { FinancialAccount } from './interfaces/banking-account.interface';
 import { BankingListRequest } from './interfaces/banking-list-request.interface';
 import { FinancialTransaction } from './interfaces/banking-operation.interface';
@@ -35,5 +37,15 @@ export class BankingController {
       `Kafka ${BANKING_OPERATIONS_LIST} email=${payload.email}, accountId=${accountId ?? 'missing'}`,
     );
     return this.bankingService.listOperations(payload.email, accountId);
+  }
+
+  @MessagePattern(BANKING_FINANCIAL_OPERATIONS_CREATE)
+  createFinancialOperation(
+    payload: CreateFinancialOperationRequest,
+  ): Promise<FinancialTransaction> {
+    this.logger.log(
+      `Kafka ${BANKING_FINANCIAL_OPERATIONS_CREATE} email=${payload.email}, accountId=${payload.accountId}`,
+    );
+    return this.bankingService.createFinancialOperation(payload);
   }
 }

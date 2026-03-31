@@ -1,6 +1,8 @@
 import {
+  Body,
   Controller,
   Get,
+  Post,
   Query,
   Req,
   UseGuards,
@@ -15,6 +17,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 import { BankingService } from './banking.service';
+import { CreateFinancialOperationDto } from './dto/create-operation.dto';
 import { FinancialAccount } from './interfaces/banking-account.interface';
 import { FinancialTransaction } from './interfaces/banking-operation.interface';
 
@@ -48,5 +51,23 @@ export class BankingController {
     @Query('accountId') accountId?: string,
   ): Promise<FinancialTransaction[]> {
     return this.bankingService.listOperations(req.user.email, accountId?.trim());
+  }
+
+  @Post('operations')
+  @ApiOperation({
+    summary: 'Create a financial operation and emit real-time event',
+  })
+  @ApiResponse({ status: 201, description: 'Financial operation created successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  createFinancialOperation(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: CreateFinancialOperationDto,
+  ): Promise<FinancialTransaction> {
+    return this.bankingService.createFinancialOperation(
+      req.user.email,
+      dto.accountId.trim(),
+      dto.currency.trim(),
+      dto.amount,
+    );
   }
 }

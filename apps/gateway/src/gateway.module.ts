@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthController } from './auth/auth.controller';
 import { AuthModule } from './auth/auth.module';
+import { BankingEventsController } from './banking/banking-events.controller';
 import { BankingModule } from './banking/banking.module';
 import { GatewayController } from './gateway.controller';
 import { SsoModule } from './sso/sso.module';
@@ -23,7 +24,7 @@ import { SsoModule } from './sso/sso.module';
     AuthModule,
     BankingModule,
   ],
-  controllers: [GatewayController, AuthController],
+  controllers: [GatewayController, AuthController, BankingEventsController],
   providers: [
     {
       provide: APP_GUARD,

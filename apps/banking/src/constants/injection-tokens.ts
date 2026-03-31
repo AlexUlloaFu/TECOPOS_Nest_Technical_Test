@@ -1,0 +1,1 @@
+export const BANKING_EVENTS_CLIENT = 'BANKING_EVENTS_CLIENT' as const;

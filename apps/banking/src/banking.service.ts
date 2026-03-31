@@ -1,37 +1,49 @@
 import { HttpService } from '@nestjs/axios';
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { RpcException } from '@nestjs/microservices';
+import { ClientKafka, RpcException } from '@nestjs/microservices';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
+import { BANKING_EVENTS_CLIENT } from './constants/injection-tokens';
+import { BANKING_FINANCIAL_OPERATION_CREATED_EVENT } from './constants/banking.patterns';
 import { FinancialAccount } from './interfaces/banking-account.interface';
+import { CreateFinancialOperationRequest } from './interfaces/create-operation-request.interface';
 import { FinancialTransaction } from './interfaces/banking-operation.interface';
+import { FinancialOperationCreatedEvent } from './interfaces/operation-created-event.interface';
 
 /** MockAPI resource paths (fixed; only base URL is configurable). */
 const ACCOUNTS_PATH = '/account';
 const FINANCE_TRANSACTIONS_PATH = '/financeTransactions';
 
 @Injectable()
-export class BankingService {
+export class BankingService implements OnModuleInit {
   private readonly baseUrl: string;
   private readonly logger = new Logger(BankingService.name);
 
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    @Inject(BANKING_EVENTS_CLIENT) private readonly eventsClient: ClientKafka,
   ) {
     this.baseUrl = this.configService.get<string>('BANKING_API_BASE_URL', '');
   }
 
-  async listAccounts(_email: string): Promise<FinancialAccount[]> {
+  async onModuleInit(): Promise<void> {
+    await this.eventsClient.connect();
+  }
+
+  async listAccounts(email: string): Promise<FinancialAccount[]> {
     this.ensureBaseUrl();
     const endpoint = this.buildUrl(this.baseUrl, ACCOUNTS_PATH);
-    this.logger.log(`listAccounts requested, endpoint=${endpoint}`);
+    this.logger.log(`listAccounts requested email=${email}, endpoint=${endpoint}`);
 
     try {
       const accounts = await this.loadFinancialAccounts();
-      this.logger.log(`listAccounts resolved: totalAccounts=${accounts.length}`);
-      return accounts;
+      const filtered = accounts.filter((account) => account.userEmail === email);
+      this.logger.log(
+        `listAccounts resolved: totalAccounts=${accounts.length}, matchedAccounts=${filtered.length}, email=${email}`,
+      );
+      return filtered;
     } catch (error) {
       this.throwRpcFromHttpError(error, 'accounts');
     }
@@ -70,6 +82,77 @@ export class BankingService {
       return filtered;
     } catch (error) {
       this.throwRpcFromHttpError(error, 'operations');
+    }
+  }
+
+  async createFinancialOperation(
+    payload: CreateFinancialOperationRequest,
+  ): Promise<FinancialTransaction> {
+    this.ensureBaseUrl();
+    const accountId = payload.accountId.trim();
+    const email = payload.email.trim();
+
+    this.logger.log(
+      `createFinancialOperation requested email=${email}, accountId=${accountId}, amount=${payload.amount}, currency=${payload.currency}`,
+    );
+
+    try {
+      const accounts = await this.loadFinancialAccounts();
+      const account = accounts.find(
+        (candidate) =>
+          candidate.financialAccountId === accountId && candidate.userEmail === email,
+      );
+
+      if (!account) {
+        throw new RpcException({
+          statusCode: HttpStatus.FORBIDDEN,
+          message: 'Account does not belong to authenticated user',
+        });
+      }
+
+      const response = await firstValueFrom(
+        this.httpService.post<unknown>(
+          this.buildUrl(this.baseUrl, FINANCE_TRANSACTIONS_PATH),
+          {
+            accountId,
+            financialAccountId: accountId,
+            currency: payload.currency,
+            amount: payload.amount,
+          },
+        ),
+      );
+
+      const created = this.mapTransactionFromMock(
+        response.data,
+        new Map([[account.financialAccountId, account]]),
+        email,
+      );
+
+      if (!created) {
+        throw new RpcException({
+          statusCode: HttpStatus.BAD_GATEWAY,
+          message: 'Unable to map created operation from provider response',
+        });
+      }
+
+      await this.publishOperationCreated({
+        email,
+        transactionId: created.transactionId,
+        financialAccountId: created.financialAccountId,
+        currency: created.currency,
+        amount: created.amount,
+        createdAt: new Date().toISOString(),
+      });
+
+      this.logger.log(
+        `createFinancialOperation success email=${email}, accountId=${accountId}, transactionId=${created.transactionId}`,
+      );
+      return created;
+    } catch (error) {
+      if (error instanceof RpcException) {
+        throw error;
+      }
+      this.throwRpcFromHttpError(error, 'financial operation creation');
     }
   }
 
@@ -213,5 +296,27 @@ export class BankingService {
       statusCode: HttpStatus.BAD_GATEWAY,
       message: `Unexpected error while fetching ${resource}`,
     });
+  }
+
+  private async publishOperationCreated(
+    eventPayload: FinancialOperationCreatedEvent,
+  ): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.eventsClient.emit<FinancialOperationCreatedEvent>(
+          BANKING_FINANCIAL_OPERATION_CREATED_EVENT,
+          eventPayload,
+        ),
+      );
+      this.logger.log(
+        `event published topic=${BANKING_FINANCIAL_OPERATION_CREATED_EVENT}, transactionId=${eventPayload.transactionId}`,
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Unknown event publish error';
+      this.logger.error(
+        `failed to publish ${BANKING_FINANCIAL_OPERATION_CREATED_EVENT}: ${message}`,
+      );
+    }
   }
 }

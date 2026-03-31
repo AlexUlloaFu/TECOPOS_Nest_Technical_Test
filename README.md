@@ -62,6 +62,7 @@ http://localhost:3000/api/docs
 - `GET /api/banking/accounts` (Bearer JWT)
 - `GET /api/banking/operations` (Bearer JWT, devuelve todas las transacciones del usuario)
 - `GET /api/banking/operations?accountId=<id>` (Bearer JWT, devuelve solo esa cuenta)
+- `POST /api/banking/operations` (Bearer JWT, crea operación y publica evento Kafka)
 
 Internamente, `gateway -> sso` y `gateway -> banking` usan Kafka request/reply.
 
@@ -69,7 +70,7 @@ Los endpoints de banking leen datos de un proveedor externo ([MockAPI](https://m
 
 - `BANKING_API_BASE_URL` — por ejemplo `https://69caaf2dba5984c44bf3a0d1.mockapi.io/api`.
 
-Las rutas de recurso `/accounts` y `/financeTransactions` van fijas en el código del microservicio banking.
+Las rutas de recurso `/account` y `/financeTransactions` van fijas en el código del microservicio banking.
 
 Modelo lógico actual (sin tablas físicas):
 
@@ -79,7 +80,7 @@ Modelo lógico actual (sin tablas físicas):
 
 Para que los endpoints devuelvan datos, MockAPI debe contener:
 
-- En `/accounts`: `id` (o `financialAccountId`) y `email` (o `userEmail`).
+- En `/account`: `id` (o `financialAccountId`) y `email` (o `userEmail`).
 - En `/financeTransactions`: `transactionId` (o `id`) y `financialAccountId` (o `accountId`).
 
 Ejemplo de URL de operaciones: `https://69caaf2dba5984c44bf3a0d1.mockapi.io/api/financeTransactions`.
@@ -93,6 +94,8 @@ Ejemplo de URL de operaciones: `https://69caaf2dba5984c44bf3a0d1.mockapi.io/api/
 5. Elegir un `financialAccountId` de la respuesta de cuentas.
 6. Ejecutar `GET /api/banking/operations?accountId=<financialAccountId>`.
 7. Validar que en modo con `accountId` solo salgan movimientos de esa cuenta.
+8. Crear una operación financiera con `POST /api/banking/operations` y validar que se publique el evento Kafka `banking.financial_operation.created`.
+9. Verificar consumo en Gateway en logs: `Consumed banking.financial_operation.created ...`.
 
 ### Troubleshooting Kafka rápido
 
