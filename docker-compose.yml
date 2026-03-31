@@ -4,7 +4,6 @@ services:
     container_name: tecopos-kafka
     hostname: kafka
     environment:
-      # Single-node KRaft: default RF=3 breaks __consumer_offsets; coordinator stays unavailable.
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
@@ -35,8 +34,7 @@ services:
   sso:
     build:
       context: .
-      args:
-        APP_NAME: sso
+      dockerfile: ./render/sso.Dockerfile
     container_name: tecopos-sso
     environment:
       DATABASE_URL: ${DATABASE_URL}
@@ -51,8 +49,7 @@ services:
   banking:
     build:
       context: .
-      args:
-        APP_NAME: banking
+      dockerfile: ./render/banking.Dockerfile
     container_name: tecopos-banking
     environment:
       BANKING_API_BASE_URL: ${BANKING_API_BASE_URL:-https://69caaf2dba5984c44bf3a0d1.mockapi.io/api}
@@ -67,8 +64,7 @@ services:
   gateway:
     build:
       context: .
-      args:
-        APP_NAME: gateway
+      dockerfile: ./render/gateway.Dockerfile
     container_name: tecopos-gateway
     ports:
       - '3000:3000'

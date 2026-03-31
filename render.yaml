@@ -38,9 +38,7 @@ services:
     env: docker
     plan: starter
     dockerContext: .
-    dockerfilePath: ./Dockerfile
-    dockerBuildArgs:
-      - APP_NAME=sso
+    dockerfilePath: ./render/sso.Dockerfile
     envVars:
       - key: KAFKA_BROKERS
         value: 'tecopos-kafka:9092'
@@ -52,9 +50,7 @@ services:
     env: docker
     plan: starter
     dockerContext: .
-    dockerfilePath: ./Dockerfile
-    dockerBuildArgs:
-      - APP_NAME=banking
+    dockerfilePath: ./render/banking.Dockerfile
     envVars:
       - key: KAFKA_BROKERS
         value: 'tecopos-kafka:9092'
@@ -66,9 +62,7 @@ services:
     env: docker
     plan: starter
     dockerContext: .
-    dockerfilePath: ./Dockerfile
-    dockerBuildArgs:
-      - APP_NAME=gateway
+    dockerfilePath: ./render/gateway.Dockerfile
     envVars:
       - key: KAFKA_BROKERS
         value: 'tecopos-kafka:9092'
