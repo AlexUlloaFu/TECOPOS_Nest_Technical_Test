@@ -1,10 +1,11 @@
 import { Controller, Logger } from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
+import { MessagePattern, RpcException } from '@nestjs/microservices';
 import {
-  BANKING_ACCOUNTS_LIST,
-  BANKING_FINANCIAL_OPERATIONS_CREATE,
+  BANKING_ACTION_ACCOUNTS_LIST,
+  BANKING_ACTION_FINANCIAL_OPERATIONS_CREATE,
+  BANKING_ACTION_OPERATIONS_LIST,
+  BANKING_COMMANDS,
   BANKING_HEALTH,
-  BANKING_OPERATIONS_LIST,
 } from './constants/banking.patterns';
 import { BankingService } from './banking.service';
 import { CreateFinancialOperationRequest } from './interfaces/create-operation-request.interface';
@@ -18,34 +19,47 @@ export class BankingController {
 
   constructor(private readonly bankingService: BankingService) {}
 
-  @MessagePattern(BANKING_HEALTH)
-  healthCheck(): { status: string; service: string } {
+  private healthCheck(): { status: string; service: string } {
     this.logger.log('healthCheck requested');
     return { status: 'ok', service: 'banking' };
   }
 
-  @MessagePattern(BANKING_ACCOUNTS_LIST)
-  listAccounts(payload: BankingListRequest): Promise<FinancialAccount[]> {
-    this.logger.log(`Kafka ${BANKING_ACCOUNTS_LIST} email=${payload.email}`);
-    return this.bankingService.listAccounts(payload.email);
-  }
-
-  @MessagePattern(BANKING_OPERATIONS_LIST)
-  listOperations(payload: BankingListRequest): Promise<FinancialTransaction[]> {
-    const accountId = payload.accountId?.trim();
-    this.logger.log(
-      `Kafka ${BANKING_OPERATIONS_LIST} email=${payload.email}, accountId=${accountId ?? 'missing'}`,
-    );
-    return this.bankingService.listOperations(payload.email, accountId);
-  }
-
-  @MessagePattern(BANKING_FINANCIAL_OPERATIONS_CREATE)
-  createFinancialOperation(
-    payload: CreateFinancialOperationRequest,
-  ): Promise<FinancialTransaction> {
-    this.logger.log(
-      `Kafka ${BANKING_FINANCIAL_OPERATIONS_CREATE} email=${payload.email}, accountId=${payload.accountId}`,
-    );
-    return this.bankingService.createFinancialOperation(payload);
+  @MessagePattern(BANKING_COMMANDS)
+  handleBankingCommand(
+    payload: { action?: string; data?: unknown },
+  ):
+    | { status: string; service: string }
+    | Promise<FinancialAccount[]>
+    | Promise<FinancialTransaction[]>
+    | Promise<FinancialTransaction> {
+    switch (payload.action) {
+      case BANKING_HEALTH:
+        return this.healthCheck();
+      case BANKING_ACTION_ACCOUNTS_LIST: {
+        const request = payload.data as BankingListRequest;
+        this.logger.log(`Kafka ${BANKING_ACTION_ACCOUNTS_LIST} email=${request.email}`);
+        return this.bankingService.listAccounts(request.email);
+      }
+      case BANKING_ACTION_OPERATIONS_LIST: {
+        const request = payload.data as BankingListRequest;
+        const accountId = request.accountId?.trim();
+        this.logger.log(
+          `Kafka ${BANKING_ACTION_OPERATIONS_LIST} email=${request.email}, accountId=${accountId ?? 'missing'}`,
+        );
+        return this.bankingService.listOperations(request.email, accountId);
+      }
+      case BANKING_ACTION_FINANCIAL_OPERATIONS_CREATE: {
+        const request = payload.data as CreateFinancialOperationRequest;
+        this.logger.log(
+          `Kafka ${BANKING_ACTION_FINANCIAL_OPERATIONS_CREATE} email=${request.email}, accountId=${request.accountId}`,
+        );
+        return this.bankingService.createFinancialOperation(request);
+      }
+      default:
+        throw new RpcException({
+          statusCode: 400,
+          message: `Unsupported banking action: ${payload.action ?? 'missing'}`,
+        });
+    }
   }
 }

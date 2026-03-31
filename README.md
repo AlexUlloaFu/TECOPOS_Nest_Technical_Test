@@ -15,7 +15,13 @@ Configura estos valores en `.env`:
 
 - `DATABASE_URL` (base de datos de SSO).
 - `BANKING_API_BASE_URL` (base URL de MockAPI, por ejemplo `https://xxxx.mockapi.io/api`).
-- `KAFKA_BROKERS` (por defecto `kafka:9092` con Docker Compose).
+- `KAFKA_BROKERS` (host:puerto del broker externo).
+- `KAFKA_SSL` (`true` para Aiven/Confluent).
+- `KAFKA_SASL_MECHANISM` (`plain`, `scram-sha-256` o `scram-sha-512`).
+- `KAFKA_SASL_USERNAME`.
+- `KAFKA_SASL_PASSWORD`.
+- `KAFKA_SSL_REJECT_UNAUTHORIZED` (`true` recomendado; en testing puedes usar `false`).
+- `KAFKA_SSL_CA_BASE64` (opcional, CA certificate en base64).
 - `PORT` (puerto HTTP del gateway, por defecto `3000`).
 
 ## Uso
@@ -25,7 +31,15 @@ Configura estos valores en `.env`:
 ```bash
 docker compose up --build
 ```
-Compose levanta `kafka`, `sso`, `banking` y `gateway`.
+Compose levanta `sso`, `banking` y `gateway` conectados a un Kafka externo.
+
+Topicos Kafka usados (layout compacto de 5 topicos):
+
+- `auth.commands`
+- `auth.commands.reply`
+- `banking.commands`
+- `banking.commands.reply`
+- `banking.events`
 
 ### Correr en local (modo desarrollo)
 
@@ -69,4 +83,4 @@ Despliegue en este orden: `sso` y `banking` -> `gateway`.
 Notas:
 
 - El gateway usa `PORT` del entorno.
-- En local, `KAFKA_BROKERS` debe resolver a `kafka:9092`.
+- Los 3 servicios deben compartir los mismos valores `KAFKA_*`.

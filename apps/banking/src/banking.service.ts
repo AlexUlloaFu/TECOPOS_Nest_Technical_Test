@@ -5,7 +5,10 @@ import { ClientKafka, RpcException } from '@nestjs/microservices';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { BANKING_EVENTS_CLIENT } from './constants/injection-tokens';
-import { BANKING_FINANCIAL_OPERATION_CREATED_EVENT } from './constants/banking.patterns';
+import {
+  BANKING_ACTION_FINANCIAL_OPERATION_CREATED_EVENT,
+  BANKING_EVENTS,
+} from './constants/banking.patterns';
 import { FinancialAccount } from './interfaces/banking-account.interface';
 import { CreateFinancialOperationRequest } from './interfaces/create-operation-request.interface';
 import { FinancialTransaction } from './interfaces/banking-operation.interface';
@@ -304,18 +307,21 @@ export class BankingService implements OnModuleInit {
     try {
       await firstValueFrom(
         this.eventsClient.emit<FinancialOperationCreatedEvent>(
-          BANKING_FINANCIAL_OPERATION_CREATED_EVENT,
-          eventPayload,
+          BANKING_EVENTS,
+          {
+            action: BANKING_ACTION_FINANCIAL_OPERATION_CREATED_EVENT,
+            data: eventPayload,
+          },
         ),
       );
       this.logger.log(
-        `event published topic=${BANKING_FINANCIAL_OPERATION_CREATED_EVENT}, transactionId=${eventPayload.transactionId}`,
+        `event published topic=${BANKING_EVENTS}, action=${BANKING_ACTION_FINANCIAL_OPERATION_CREATED_EVENT}, transactionId=${eventPayload.transactionId}`,
       );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Unknown event publish error';
       this.logger.error(
-        `failed to publish ${BANKING_FINANCIAL_OPERATION_CREATED_EVENT}: ${message}`,
+        `failed to publish ${BANKING_EVENTS}/${BANKING_ACTION_FINANCIAL_OPERATION_CREATED_EVENT}: ${message}`,
       );
     }
   }

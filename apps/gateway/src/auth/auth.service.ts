@@ -10,9 +10,10 @@ import { ClientKafka, RpcException } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { SSO_SERVICE } from '../constants/injection-tokens';
 import {
-  AUTH_LOGIN,
-  AUTH_REGISTER,
-  AUTH_VALIDATE_TOKEN,
+  AUTH_ACTION_LOGIN,
+  AUTH_ACTION_REGISTER,
+  AUTH_ACTION_VALIDATE_TOKEN,
+  AUTH_COMMANDS,
 } from './constants/auth.patterns';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -26,25 +27,33 @@ export class AuthService implements OnModuleInit {
   constructor(@Inject(SSO_SERVICE) private readonly ssoClient: ClientKafka) {}
 
   async onModuleInit(): Promise<void> {
-    this.ssoClient.subscribeToResponseOf(AUTH_REGISTER);
-    this.ssoClient.subscribeToResponseOf(AUTH_LOGIN);
-    this.ssoClient.subscribeToResponseOf(AUTH_VALIDATE_TOKEN);
+    this.ssoClient.subscribeToResponseOf(AUTH_COMMANDS);
     await this.ssoClient.connect();
   }
 
   register(dto: RegisterDto): Promise<AuthResponse> {
-    return this.sendSso<RegisterDto, AuthResponse>(AUTH_REGISTER, { ...dto });
+    return this.sendSso<{ action: string; data: RegisterDto }, AuthResponse>({
+      action: AUTH_ACTION_REGISTER,
+      data: { ...dto },
+    });
   }
 
   login(dto: LoginDto): Promise<AuthResponse> {
-    return this.sendSso<LoginDto, AuthResponse>(AUTH_LOGIN, { ...dto });
+    return this.sendSso<{ action: string; data: LoginDto }, AuthResponse>({
+      action: AUTH_ACTION_LOGIN,
+      data: { ...dto },
+    });
   }
 
   async validateToken(token: string): Promise<TenantPayload> {
     try {
       return await firstValueFrom(
-        this.ssoClient.send<TenantPayload, { token: string }>(AUTH_VALIDATE_TOKEN, {
-          token,
+        this.ssoClient.send<
+          TenantPayload,
+          { action: string; data: { token: string } }
+        >(AUTH_COMMANDS, {
+          action: AUTH_ACTION_VALIDATE_TOKEN,
+          data: { token },
         }),
       );
     } catch {
@@ -52,10 +61,10 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  private async sendSso<TReq, TRes>(pattern: string, payload: TReq): Promise<TRes> {
+  private async sendSso<TReq, TRes>(payload: TReq): Promise<TRes> {
     try {
       return await firstValueFrom(
-        this.ssoClient.send<TRes, TReq>(pattern, payload),
+        this.ssoClient.send<TRes, TReq>(AUTH_COMMANDS, payload),
       );
     } catch (error) {
       this.mapRpcToHttp(error);

@@ -1,36 +1,4 @@
 services:
-  kafka:
-    image: apache/kafka:3.8.0
-    container_name: tecopos-kafka
-    hostname: kafka
-    environment:
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      CLUSTER_ID: 4L6g3nShT-eMCtK--X86sw
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-    healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          '/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server 127.0.0.1:9092 || exit 1',
-        ]
-      interval: 5s
-      timeout: 10s
-      retries: 12
-      start_period: 40s
-    networks:
-      - tecopos-net
-    restart: unless-stopped
-
   sso:
     build:
       context: .
@@ -38,10 +6,13 @@ services:
     container_name: tecopos-sso
     environment:
       DATABASE_URL: ${DATABASE_URL}
-      KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:9092}
-    depends_on:
-      kafka:
-        condition: service_healthy
+      KAFKA_BROKERS: ${KAFKA_BROKERS}
+      KAFKA_SSL: ${KAFKA_SSL:-true}
+      KAFKA_SSL_REJECT_UNAUTHORIZED: ${KAFKA_SSL_REJECT_UNAUTHORIZED:-true}
+      KAFKA_SSL_CA_BASE64: ${KAFKA_SSL_CA_BASE64:-}
+      KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-plain}
+      KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME}
+      KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD}
     networks:
       - tecopos-net
     restart: unless-stopped
@@ -53,10 +24,13 @@ services:
     container_name: tecopos-banking
     environment:
       BANKING_API_BASE_URL: ${BANKING_API_BASE_URL:-https://69caaf2dba5984c44bf3a0d1.mockapi.io/api}
-      KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:9092}
-    depends_on:
-      kafka:
-        condition: service_healthy
+      KAFKA_BROKERS: ${KAFKA_BROKERS}
+      KAFKA_SSL: ${KAFKA_SSL:-true}
+      KAFKA_SSL_REJECT_UNAUTHORIZED: ${KAFKA_SSL_REJECT_UNAUTHORIZED:-true}
+      KAFKA_SSL_CA_BASE64: ${KAFKA_SSL_CA_BASE64:-}
+      KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-plain}
+      KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME}
+      KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD}
     networks:
       - tecopos-net
     restart: unless-stopped
@@ -69,10 +43,14 @@ services:
     ports:
       - '3000:3000'
     environment:
-      KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:9092}
+      KAFKA_BROKERS: ${KAFKA_BROKERS}
+      KAFKA_SSL: ${KAFKA_SSL:-true}
+      KAFKA_SSL_REJECT_UNAUTHORIZED: ${KAFKA_SSL_REJECT_UNAUTHORIZED:-true}
+      KAFKA_SSL_CA_BASE64: ${KAFKA_SSL_CA_BASE64:-}
+      KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-plain}
+      KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME}
+      KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD}
     depends_on:
-      kafka:
-        condition: service_healthy
       sso:
         condition: service_started
       banking:

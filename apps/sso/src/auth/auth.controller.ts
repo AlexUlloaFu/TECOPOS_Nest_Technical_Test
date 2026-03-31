@@ -1,10 +1,11 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
 import {
-  AUTH_LOGIN,
-  AUTH_REGISTER,
-  AUTH_VALIDATE_TOKEN,
+  AUTH_ACTION_LOGIN,
+  AUTH_ACTION_REGISTER,
+  AUTH_ACTION_VALIDATE_TOKEN,
+  AUTH_COMMANDS,
 } from './auth.constants';
 import { RegisterTenantDto } from './dto/register-tenant.dto';
 import { LoginTenantDto } from './dto/login-tenant.dto';
@@ -13,18 +14,22 @@ import { LoginTenantDto } from './dto/login-tenant.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @MessagePattern(AUTH_REGISTER)
-  register(@Payload() dto: RegisterTenantDto) {
-    return this.authService.register(dto);
-  }
-
-  @MessagePattern(AUTH_LOGIN)
-  login(@Payload() dto: LoginTenantDto) {
-    return this.authService.login(dto);
-  }
-
-  @MessagePattern(AUTH_VALIDATE_TOKEN)
-  validateToken(@Payload() data: { token: string }) {
-    return this.authService.validateToken(data.token);
+  @MessagePattern(AUTH_COMMANDS)
+  handleAuthCommand(
+    @Payload() payload: { action?: string; data?: unknown },
+  ): Promise<unknown> {
+    switch (payload.action) {
+      case AUTH_ACTION_REGISTER:
+        return this.authService.register(payload.data as RegisterTenantDto);
+      case AUTH_ACTION_LOGIN:
+        return this.authService.login(payload.data as LoginTenantDto);
+      case AUTH_ACTION_VALIDATE_TOKEN:
+        return this.authService.validateToken((payload.data as { token: string }).token);
+      default:
+        throw new RpcException({
+          statusCode: 400,
+          message: `Unsupported auth action: ${payload.action ?? 'missing'}`,
+        });
+    }
   }
 }

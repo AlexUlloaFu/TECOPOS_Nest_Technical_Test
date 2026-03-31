@@ -9,9 +9,10 @@ import { ClientKafka, RpcException } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { BANKING_SERVICE } from '../constants/injection-tokens';
 import {
-  BANKING_ACCOUNTS_LIST,
-  BANKING_FINANCIAL_OPERATIONS_CREATE,
-  BANKING_OPERATIONS_LIST,
+  BANKING_ACTION_ACCOUNTS_LIST,
+  BANKING_ACTION_FINANCIAL_OPERATIONS_CREATE,
+  BANKING_ACTION_OPERATIONS_LIST,
+  BANKING_COMMANDS,
 } from './constants/banking.patterns';
 import { CreateFinancialOperationRequest } from './interfaces/create-operation-request.interface';
 import { FinancialAccount } from './interfaces/banking-account.interface';
@@ -27,30 +28,34 @@ export class BankingService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    this.bankingClient.subscribeToResponseOf(BANKING_ACCOUNTS_LIST);
-    this.bankingClient.subscribeToResponseOf(BANKING_OPERATIONS_LIST);
-    this.bankingClient.subscribeToResponseOf(BANKING_FINANCIAL_OPERATIONS_CREATE);
+    this.bankingClient.subscribeToResponseOf(BANKING_COMMANDS);
     await this.bankingClient.connect();
   }
 
   listAccounts(email: string): Promise<FinancialAccount[]> {
-    return this.sendBanking<BankingListRequest, FinancialAccount[]>(
-      BANKING_ACCOUNTS_LIST,
-      { email },
-    );
+    return this.sendBanking<
+      { action: string; data: BankingListRequest },
+      FinancialAccount[]
+    >({
+      action: BANKING_ACTION_ACCOUNTS_LIST,
+      data: { email },
+    });
   }
 
   listOperations(
     email: string,
     accountId?: string,
   ): Promise<FinancialTransaction[]> {
-    return this.sendBanking<BankingListRequest, FinancialTransaction[]>(
-      BANKING_OPERATIONS_LIST,
-      {
+    return this.sendBanking<
+      { action: string; data: BankingListRequest },
+      FinancialTransaction[]
+    >({
+      action: BANKING_ACTION_OPERATIONS_LIST,
+      data: {
         email,
         ...(accountId ? { accountId } : {}),
       },
-    );
+    });
   }
 
   createFinancialOperation(
@@ -59,19 +64,19 @@ export class BankingService implements OnModuleInit {
     currency: string,
     amount: number,
   ): Promise<FinancialTransaction> {
-    return this.sendBanking<CreateFinancialOperationRequest, FinancialTransaction>(
-      BANKING_FINANCIAL_OPERATIONS_CREATE,
-      { email, accountId, currency, amount },
-    );
+    return this.sendBanking<
+      { action: string; data: CreateFinancialOperationRequest },
+      FinancialTransaction
+    >({
+      action: BANKING_ACTION_FINANCIAL_OPERATIONS_CREATE,
+      data: { email, accountId, currency, amount },
+    });
   }
 
-  private async sendBanking<TReq, TRes>(
-    pattern: string,
-    payload: TReq,
-  ): Promise<TRes> {
+  private async sendBanking<TReq, TRes>(payload: TReq): Promise<TRes> {
     try {
       return await firstValueFrom(
-        this.bankingClient.send<TRes, TReq>(pattern, payload),
+        this.bankingClient.send<TRes, TReq>(BANKING_COMMANDS, payload),
       );
     } catch (error) {
       this.mapRpcToHttp(error);
